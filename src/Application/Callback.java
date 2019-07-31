@@ -12,5 +12,5 @@ package Application;
 public interface Callback {
     void displayTile(int x, int y, String label);
     void flagTile(int x, int y);
-    void gameOver();
+    void gameOver(boolean didWin);
 }

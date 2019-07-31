@@ -9,17 +9,19 @@ package Application;
  *
  * @author brendon
  */
-enum Difficulty {
+public enum Difficulty {
+    NONE(0),
     BEGINNER(10),
     INTERMEDIATE(40),
     EXPERT(99);
-    private int bombCount;
+    
+    private int mineCount;
 
-    private Difficulty(int bombCount) {
-        this.bombCount = bombCount;
+    private Difficulty(int mineCount) {
+        this.mineCount = mineCount;
     }
 
-    public int getBombCount() {
-        return this.bombCount;
+    public int getMineCount() {
+        return this.mineCount;
     }
 }

@@ -15,7 +15,7 @@ import java.util.TimerTask;
  *
  * @author brendon
  */
-public class Controller implements Callback{
+public class Controller implements Callback {
 
     private ApplicationView view;
     private Minefield minefield;
@@ -27,24 +27,29 @@ public class Controller implements Callback{
         this.view = view;
         setupSideBarButtons();
     }
-    
+
     public void flagTile(int xPosition, int yPosition) {
         view.flagTile(xPosition, yPosition);
     }
-    
+
     public void displayTile(int xPosition, int yPosition, String label) {
         view.revealTile(xPosition, yPosition, label);
     }
-    
-    public void gameOver() {
+
+    public void gameOver(boolean didWin) {
         stopGameTimer();
         isAGameRunning = false;
-        int selectedOption = JOptionPane.showConfirmDialog(null, "BANG!\nPlay again?", "Game Over!", JOptionPane.YES_NO_OPTION);
+        String message = didWin ? "Congratulations, You've Won!\nPlay Again?" : "BANG, You've Lost!\nPlay Again?";
+        String title = didWin ? "Winner" : "Loser";
+        promptUserWithOutcome(message, title);
+    }
+    
+    private void promptUserWithOutcome(String message, String title) {
+        int selectedOption = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
         if (selectedOption >= 0) {
             view.deconstructGrid();
-            if (selectedOption == 0) {
-                initiateMinesweeperGrid();
-            }
+            if (selectedOption == 0)
+                promptUserForGameDifficulty();
         }
     }
 
@@ -58,17 +63,34 @@ public class Controller implements Callback{
     // Handles creating a new minesweeper game.
     private void playMinesweeperButtonClicked() {
         if (!isAGameRunning) {
-            initiateMinesweeperGrid();
+            promptUserForGameDifficulty();
         } else {
             handleGameRunning(promptUser());
         }
     }
     
+    private void promptUserForGameDifficulty() {
+        int selection = JOptionPane.showConfirmDialog(null, view.getDifficultySelectionPanel(),
+                "Select Difficulty", JOptionPane.OK_CANCEL_OPTION);
+        if (selection == 0) {
+            initiateMinesweeperGrid(getGameDifficulty(view.getSelectedDifficulty()));
+        }
+    }
+    
+    private Difficulty getGameDifficulty(String difficulty) {
+        switch (difficulty) {
+            case "Beginner" : return Difficulty.BEGINNER;
+            case "Intermediate" : return Difficulty.INTERMEDIATE;
+            case "Expert" : return Difficulty.EXPERT;
+        }
+        return Difficulty.NONE;
+    }
+
     // Handles creating a new hexagonal minesweeper game.
     private void playHexagonalMinesweeperButtonClicked() {
         JOptionPane.showConfirmDialog(null, "Game mode currently not implemented", "Not Implemented", JOptionPane.OK_OPTION);
     }
-    
+
     // Handles creating a new colouring problem minesweeper game.
     private void playColouringProblemMinesweeperButtonClicked() {
         JOptionPane.showConfirmDialog(null, "Game mode currently not implemented", "Not Implemented", JOptionPane.OK_OPTION);
@@ -90,13 +112,13 @@ public class Controller implements Callback{
     }
 
     // Instantiates the minesweeper grid tiles and sets the action listeners.
-    private void initiateMinesweeperGrid() {
+    private void initiateMinesweeperGrid(Difficulty difficulty) {
         isAGameRunning = true;
-        minefield = new Minefield(9, Difficulty.BEGINNER);
+        minefield = new Minefield(difficulty);
         minefield.callback = this;
-        view.instantiateMinesweeperGrid(minefield.getGridLength());
-        for (int x = 0; x < minefield.getGridLength(); x++) {
-            for (int y = 0; y < minefield.getGridLength(); y++) {
+        view.instantiateMinesweeperGrid(minefield.getGridWidth(), minefield.getGridHeight());
+        for (int x = 0; x < minefield.getGridWidth(); x++) {
+            for (int y = 0; y < minefield.getGridHeight(); y++) {
                 view.instantiateTiles(x, y);
                 view.getMinesweeperGridTile(x, y).addMouseListener(new MouseListener() {
                     @Override
@@ -124,7 +146,6 @@ public class Controller implements Callback{
 
                     }
                 });
-                //view.addTileToGrid(x, y);
             }
         }
     }
@@ -135,19 +156,20 @@ public class Controller implements Callback{
             isTimerRunning = true;
             startGameTimer();
         }
-        for (int x = 0; x < minefield.getGridLength(); x++) {
-            for (int y = 0; y < minefield.getGridLength(); y++) {
+        for (int x = 0; x < minefield.getGridWidth(); x++) {
+            for (int y = 0; y < minefield.getGridHeight(); y++) {
                 if (view.getMinesweeperGridTile(x, y) == e.getSource()) {
                     minefield.selectTile(x, y, e.getButton() == 3);
                 }
             }
         }
     }
-    
+
     private void startGameTimer() {
         timer = new Timer();
         new Thread(new Runnable() {
             int time = 0;
+
             @Override
             public void run() {
                 timer.scheduleAtFixedRate(new TimerTask() {
@@ -160,7 +182,7 @@ public class Controller implements Callback{
             }
         }).start();
     }
-    
+
     private void stopGameTimer() {
         isTimerRunning = false;
         timer.cancel();

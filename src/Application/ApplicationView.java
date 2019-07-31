@@ -7,7 +7,6 @@ package Application;
 
 import java.awt.Color;
 import java.awt.Font;
-import javax.swing.plaf.basic.BasicButtonUI;
 
 /**
  *
@@ -26,6 +25,8 @@ public class ApplicationView {
     private javax.swing.JButton playHexagonalMinesweeperButton;
     private javax.swing.JButton playMinesweeperButton;
     private javax.swing.JButton[][] tiles;
+    private javax.swing.JPanel difficultySelectionPanel;
+    private javax.swing.ButtonGroup radioButtonGroup;
 
     public ApplicationView() {
         applicationFrame = new javax.swing.JFrame();
@@ -39,6 +40,7 @@ public class ApplicationView {
         playColourProblemMinesweeperButton = new javax.swing.JButton();
         minesweeperGrid = new javax.swing.JPanel();
         minesweeperGrid.setVisible(false);
+        difficultySelectionPanel = new javax.swing.JPanel();
 
         applicationFrame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         applicationFrame.setTitle("Minesweeper");
@@ -56,6 +58,24 @@ public class ApplicationView {
         scoreLabel.setFont(new java.awt.Font("Lucida Grande", 0, 36)); // NOI18N
         scoreLabel.setForeground(new java.awt.Color(255, 255, 255));
         scoreLabel.setText("0");
+        
+        javax.swing.JRadioButton beginnerButton = new javax.swing.JRadioButton("Beginner", true);
+        javax.swing.JRadioButton intermediateButton = new javax.swing.JRadioButton("Intermediate");
+        javax.swing.JRadioButton expertButton = new javax.swing.JRadioButton("Expert");
+        beginnerButton.setActionCommand("Beginner");
+        intermediateButton.setActionCommand("Intermediate");
+        expertButton.setActionCommand("Expert");
+        radioButtonGroup = new javax.swing.ButtonGroup();
+        radioButtonGroup.add(beginnerButton);
+        radioButtonGroup.add(intermediateButton);
+        radioButtonGroup.add(expertButton);
+        difficultySelectionPanel.add(beginnerButton);
+        difficultySelectionPanel.add(intermediateButton);
+        difficultySelectionPanel.add(expertButton);
+        //difficultySelectionPanel.add(new javax.swing.JCheckBox("Beginner"));
+        //difficultySelectionPanel.add(new javax.swing.JCheckBox("Intermediate"));
+        //difficultySelectionPanel.add(new javax.swing.JCheckBox("Expert"));
+        
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -174,14 +194,23 @@ public class ApplicationView {
         return this.playColourProblemMinesweeperButton;
     }
     
+    public javax.swing.JPanel getDifficultySelectionPanel() {
+        return this.difficultySelectionPanel;
+    }
+    
+    public String getSelectedDifficulty() {
+        return this.radioButtonGroup.getSelection().getActionCommand();
+    }
+    
     // Returns the minesweeper grid.
     public javax.swing.JPanel getMinesweeperGrid() {
         return this.minesweeperGrid;
     }
     
     // Instantiates the minesweeper grid.
-    public void instantiateMinesweeperGrid(int gridLength) {
-        tiles = new javax.swing.JButton[gridLength][gridLength];
+    public void instantiateMinesweeperGrid(int gridWidth, int gridHeight) {
+        minesweeperGrid.setLayout(new java.awt.GridLayout(gridWidth, gridHeight, -5, -5));
+        tiles = new javax.swing.JButton[gridWidth][gridHeight];
     }
     
     // Instantiates minesweeper grid tiles.
