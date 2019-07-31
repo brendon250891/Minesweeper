@@ -10,28 +10,13 @@ package Application;
  * @author brendon
  */
 public class Tile {
-    private int gridPositionX;
-    private int gridPositionY;
     private int adjacentMineCount = 0;
     private boolean isMineTile = false;
     private boolean isTileRevealed = false;
     private boolean isTileFlagged = false;
     
-    public Tile(int gridPositionX, int gridPositionY) {
-        this.gridPositionX = gridPositionX;
-        this.gridPositionY = gridPositionY;
-    }
-    
-    // Returns the Tiles x-axis position in the grid.
-    public int getGridPositionX() {
-        return gridPositionX;
-    }
-    
-    // Returns the Tiles y-axis position in the grid.
-    public int getGridPositionY() {
-        return gridPositionY;
-    }
-    
+    public Tile() {}
+
     // Increments the adjacent mine count by 1
     public void incrementAdjacentMineCount() {
         this.adjacentMineCount++;

@@ -18,7 +18,7 @@ public class ApplicationView {
     private javax.swing.JFrame applicationFrame;
     private javax.swing.JPanel backgroundPanel;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel scoreLabel;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel minesweeperGrid;
@@ -31,7 +31,7 @@ public class ApplicationView {
         applicationFrame = new javax.swing.JFrame();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
+        scoreLabel = new javax.swing.JLabel();
         backgroundPanel = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         playMinesweeperButton = new javax.swing.JButton();
@@ -53,9 +53,9 @@ public class ApplicationView {
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
         jLabel1.setText("Score:");
 
-        jLabel2.setFont(new java.awt.Font("Lucida Grande", 0, 36)); // NOI18N
-        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("0");
+        scoreLabel.setFont(new java.awt.Font("Lucida Grande", 0, 36)); // NOI18N
+        scoreLabel.setForeground(new java.awt.Color(255, 255, 255));
+        scoreLabel.setText("0");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -65,7 +65,7 @@ public class ApplicationView {
                                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jLabel1)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jLabel2)
+                                .addComponent(scoreLabel)
                                 .addGap(397, 397, 397))
         );
         jPanel3Layout.setVerticalGroup(
@@ -74,7 +74,7 @@ public class ApplicationView {
                                 .addGap(19, 19, 19)
                                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(jLabel1)
-                                        .addComponent(jLabel2))
+                                        .addComponent(scoreLabel))
                                 .addContainerGap(18, Short.MAX_VALUE))
         );
 
@@ -188,10 +188,8 @@ public class ApplicationView {
     public void instantiateTiles(int x, int y) {
         tiles[x][y] = new javax.swing.JButton();
         tiles[x][y].setFont(new Font("Lucinda Grande", Font.PLAIN, 36));
-    }
-    
-    public void addTileToGrid(int x, int y) {
         minesweeperGrid.add(tiles[x][y]);
+        repaintMinesweeperGrid();
     }
     
     // Returns a minesweeper grid tile.
@@ -212,6 +210,7 @@ public class ApplicationView {
     public void deconstructGrid() {
         minesweeperGrid.removeAll();
         minesweeperGrid.setVisible(false);
+        setScoreLabel(0);
     }
     
     // Repaints the minesweeper grid.
@@ -219,6 +218,11 @@ public class ApplicationView {
         minesweeperGrid.setVisible(true);
         minesweeperGrid.revalidate();
         minesweeperGrid.repaint();
+        setScoreLabel(0);
+    }
+    
+    public void setScoreLabel(int time) {
+        scoreLabel.setText(Integer.toString(time));
     }
     
     private Color getTileTextColour(int mineCount) {

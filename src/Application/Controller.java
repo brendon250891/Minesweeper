@@ -5,11 +5,11 @@
  */
 package Application;
 
-import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  *
@@ -21,6 +21,7 @@ public class Controller implements Callback{
     private Minefield minefield;
     private boolean isAGameRunning = false;
     private boolean isTimerRunning = false;
+    private Timer timer;
 
     public Controller(ApplicationView view) {
         this.view = view;
@@ -32,10 +33,18 @@ public class Controller implements Callback{
     }
     
     public void displayTile(int xPosition, int yPosition, String label) {
-        if (label.equalsIgnoreCase("b")) {
-            gameOver();
-        } else {
-            view.revealTile(xPosition, yPosition, label);
+        view.revealTile(xPosition, yPosition, label);
+    }
+    
+    public void gameOver() {
+        stopGameTimer();
+        isAGameRunning = false;
+        int selectedOption = JOptionPane.showConfirmDialog(null, "BANG!\nPlay again?", "Game Over!", JOptionPane.YES_NO_OPTION);
+        if (selectedOption >= 0) {
+            view.deconstructGrid();
+            if (selectedOption == 0) {
+                initiateMinesweeperGrid();
+            }
         }
     }
 
@@ -49,12 +58,9 @@ public class Controller implements Callback{
     // Handles creating a new minesweeper game.
     private void playMinesweeperButtonClicked() {
         if (!isAGameRunning) {
-            isAGameRunning = true;
-            minefield = new Minefield(9, Difficulty.BEGINNER);
-            minefield.callback = this;
             initiateMinesweeperGrid();
         } else {
-            handleAlreadyGameRunning(promptUser());
+            handleGameRunning(promptUser());
         }
     }
     
@@ -69,9 +75,11 @@ public class Controller implements Callback{
     }
 
     // Handles the selection of the user when a game is already in progress.
-    private void handleAlreadyGameRunning(int optionSelected) {
+    private void handleGameRunning(int optionSelected) {
         if (optionSelected == 0) {
-            gameOver();
+            isAGameRunning = false;
+            view.deconstructGrid();
+            minefield.revealMinefield();
         }
     }
 
@@ -83,6 +91,9 @@ public class Controller implements Callback{
 
     // Instantiates the minesweeper grid tiles and sets the action listeners.
     private void initiateMinesweeperGrid() {
+        isAGameRunning = true;
+        minefield = new Minefield(9, Difficulty.BEGINNER);
+        minefield.callback = this;
         view.instantiateMinesweeperGrid(minefield.getGridLength());
         for (int x = 0; x < minefield.getGridLength(); x++) {
             for (int y = 0; y < minefield.getGridLength(); y++) {
@@ -113,76 +124,46 @@ public class Controller implements Callback{
 
                     }
                 });
-                view.addTileToGrid(x, y);
+                //view.addTileToGrid(x, y);
             }
         }
-        view.repaintMinesweeperGrid();
     }
 
     // Handles the selection of minesweeper grid tiles.
     private void minesweeperGridTileClicked(MouseEvent e) {
+        if (!isTimerRunning) {
+            isTimerRunning = true;
+            startGameTimer();
+        }
         for (int x = 0; x < minefield.getGridLength(); x++) {
             for (int y = 0; y < minefield.getGridLength(); y++) {
                 if (view.getMinesweeperGridTile(x, y) == e.getSource()) {
-                    if (e.getButton() == 3 || e.getModifiersEx() == 64) {
-                        minefield.selectTile(x, y, true);
-                    } else {
-                        minefield.selectTile(x, y, false);
-                    }
+                    minefield.selectTile(x, y, e.getButton() == 3);
                 }
             }
         }
     }
-
-    /**
-     * Flags a tile preventing it from being revealed.
-     *
-     * @param x - The position of the tile on the grids x axis.
-     * @param y - The position of the tile on the grids y axis.
-     
-    private void flagTile(int x, int y) {
-        Tile tile = minefield.getTile(x, y);
-        JButton gridTile = view.getMinesweeperGridTile(x, y);
-        tile.flagTile();
-        if (tile.isTileFlagged()) {
-            gridTile.setText("F");
-        } else {
-            gridTile.setText("");
-        }
-    }*/
-
-    // Handles tile selection
-    /*private void selectTile(int x, int y) {
-        JButton gridTile = view.getMinesweeperGridTile(x, y);
-        Tile tile = minefield.getTile(x, y);
-        if (!tile.isTileFlagged()) {
-            gridTile.setEnabled(false);
-            if (tile.isMineTile()) {
-                gridTile.setText("B");
-                //endGame();
-            } else if (tile.getAdjacentMineCount() == 0 && !tile.isTileRevealed()) {
-                minefield.selectTile(x, y);
-            } else {
-                gridTile.setText(String.format("%s", tile.getAdjacentMineCount() == 0 ? "" : tile.getAdjacentMineCount()));
-                tile.revealTile();
+    
+    private void startGameTimer() {
+        timer = new Timer();
+        new Thread(new Runnable() {
+            int time = 0;
+            @Override
+            public void run() {
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        time++;
+                        view.setScoreLabel(time);
+                    }
+                }, 0, 1000);
             }
-        }
-    }*/
-
-    // Ends the game when a mine is selected.
-    private void gameOver() {
-        isAGameRunning = false;
-        revealGrid();
-        // resetTimer();
-        //deconstructGrid();
+        }).start();
     }
     
-    private void revealGrid() {
-        minefield.revealMinefield();
-    }
-
-    private void deconstructGrid() {
-        view.deconstructGrid();
+    private void stopGameTimer() {
+        isTimerRunning = false;
+        timer.cancel();
     }
 
     // If a tile has no adjacent mines then neighbouring tiles are revealed.

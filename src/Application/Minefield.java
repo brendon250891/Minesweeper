@@ -37,7 +37,7 @@ public class Minefield {
     private void instantiateTiles() {
         for (int x = 0; x < gridLength; x++) {
             for (int y = 0; y < gridLength; y++) {
-                tiles[x][y] = new Tile(x, y);
+                tiles[x][y] = new Tile();
             }
         }
         randomizeMineTiles();
@@ -52,13 +52,16 @@ public class Minefield {
             tile.revealTile();
             revealNeighborhood(xPosition, yPosition);
         } else if (tile.isMineTile()) {
+            tile.revealTile();
             callback.displayTile(xPosition, yPosition, "B");
-        } else {
+            revealMinefield();
+        } else if (!tile.isTileFlagged()) {
             tile.revealTile();
             callback.displayTile(xPosition, yPosition, tile.getAdjacentMineCount() == 0 ? "" 
                     : Integer.toString(tile.getAdjacentMineCount()));
         }
     }
+   
     
     public void revealMinefield() {
         for (int x = 0; x < gridLength; x++) {
@@ -71,6 +74,8 @@ public class Minefield {
                 }
             }
         }
+        callback.gameOver();
+        tiles = null;
     }
 
     private void randomizeMineTiles() {
