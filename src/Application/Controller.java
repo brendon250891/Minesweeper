@@ -12,63 +12,114 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- *
+ * Communicates player interaction with the View to be reflected in the Model.
  * @author brendon
  */
 public class Controller implements Callback {
-
+    // The view of the application.
     private ApplicationView view;
+    
+    // The Minefield of the current game if one is runnnig.
     private Minefield minefield;
+    
+    // Flag to indicate if a game is running.
     private boolean isAGameRunning = false;
+    
+    // Flag to indicate if the timer is running
     private boolean isTimerRunning = false;
+    
+    // The timer for the current game.
     private Timer timer;
 
+    /**
+     * The default constructor
+     * @param view - The applications View instance.
+     */
     public Controller(ApplicationView view) {
         this.view = view;
         setupSideBarButtons();
     }
 
-    public void flagTile(int xPosition, int yPosition) {
-        view.flagTile(xPosition, yPosition);
+    /**
+     * Interface method to flag a tile on the view.
+     * @param tile - The Tile to flag.
+     */
+    @Override
+    public void flagTile(Tile tile) {
+        view.flagTile(tile.getXPosition(), tile.getYPosition());
+    }
+    
+    /**
+     * Interface method to display a selected tile.
+     * @param tile - The Tile to display it's label.
+     */
+    @Override
+    public void displayTile(Tile tile) {
+        view.revealTile(tile.getXPosition(), tile.getYPosition(), tile.getTileLabel());
     }
 
-    public void displayTile(int xPosition, int yPosition, String label) {
-        view.revealTile(xPosition, yPosition, label);
-    }
-
+    /**
+     * Interface method to end a game when a outcome has been reached.
+     * @param didWin - true if the player won.
+     */
+    @Override
     public void gameOver(boolean didWin) {
         stopGameTimer();
-        isAGameRunning = false;
         String message = didWin ? "Congratulations, You've Won!\nPlay Again?" : "BANG, You've Lost!\nPlay Again?";
         String title = didWin ? "Winner" : "Loser";
         promptUserWithOutcome(message, title);
     }
     
+    /**
+     * Prompts the user with a confirm dialog indicating the outcome of the current game.
+     * @param message - The message to display.
+     * @param title - The title of the dialog box.
+     */
     private void promptUserWithOutcome(String message, String title) {
         int selectedOption = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION);
         if (selectedOption >= 0) {
+            this.stopGameTimer();
             view.deconstructGrid();
             if (selectedOption == 0)
                 promptUserForGameDifficulty();
         }
     }
+    
+    /**
+     * Prompts the user if they try to start a game when one is currently running.
+     * @param message - The message to display.
+     * @param title  - The title of the dialog box.
+     */
+    private void promptUserRunningGame(String message, String title) {
+        if (JOptionPane.showConfirmDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION) == 0) {
+            this.stopGameTimer();
+            view.deconstructGrid();
+        }
+    }
 
-    // Sets up the sidebar buttons action listeners.
+    /**
+     * Sets up the left side panel play game buttons action listeners.
+     */
     private void setupSideBarButtons() {
         view.getPlayMinesweeperButton().addActionListener(e -> playMinesweeperButtonClicked());
         view.getHexagonalMinesweeperButton().addActionListener(e -> playHexagonalMinesweeperButtonClicked());
         view.getColouringProblemMinesweeperButton().addActionListener(e -> playColouringProblemMinesweeperButtonClicked());
     }
 
-    // Handles creating a new minesweeper game.
+    /**
+     * Handles the clicking of the play minesweeper button.
+     */
     private void playMinesweeperButtonClicked() {
         if (!isAGameRunning) {
             promptUserForGameDifficulty();
         } else {
-            handleGameRunning(promptUser());
+            promptUserRunningGame("Do You Want To End Current Game", "Game in Progress");
         }
     }
     
+    /**
+     * Prompts the user to select what game difficulty they wish to play.
+     */
     private void promptUserForGameDifficulty() {
         int selection = JOptionPane.showConfirmDialog(null, view.getDifficultySelectionPanel(),
                 "Select Difficulty", JOptionPane.OK_CANCEL_OPTION);
@@ -77,6 +128,11 @@ public class Controller implements Callback {
         }
     }
     
+    /**
+     * Gets the selected game difficulty based on the players selection.
+     * @param difficulty - The text of the radio button selected.
+     * @return 
+     */
     private Difficulty getGameDifficulty(String difficulty) {
         switch (difficulty) {
             case "Beginner" : return Difficulty.BEGINNER;
@@ -86,32 +142,24 @@ public class Controller implements Callback {
         return Difficulty.NONE;
     }
 
-    // Handles creating a new hexagonal minesweeper game.
+    /**
+     * Handles the clicking of the play hexagonal minesweeper button.
+     */
     private void playHexagonalMinesweeperButtonClicked() {
-        JOptionPane.showConfirmDialog(null, "Game mode currently not implemented", "Not Implemented", JOptionPane.OK_OPTION);
+        JOptionPane.showMessageDialog(null, "Game mode currently not implemented", "Not Implemented", JOptionPane.OK_OPTION);
     }
 
-    // Handles creating a new colouring problem minesweeper game.
+    /**
+     * Handles the click of the play colouring problem minesweeper button.
+     */
     private void playColouringProblemMinesweeperButtonClicked() {
-        JOptionPane.showConfirmDialog(null, "Game mode currently not implemented", "Not Implemented", JOptionPane.OK_OPTION);
+        JOptionPane.showMessageDialog(null, "Game mode currently not implemented", "Not Implemented", JOptionPane.OK_OPTION);
     }
 
-    // Handles the selection of the user when a game is already in progress.
-    private void handleGameRunning(int optionSelected) {
-        if (optionSelected == 0) {
-            isAGameRunning = false;
-            view.deconstructGrid();
-            minefield.revealMinefield();
-        }
-    }
-
-    // Notifies the user that a game is in progress.
-    private int promptUser() {
-        return JOptionPane.showConfirmDialog(null, "A game is currently in progress.\nDo you want to stop current game.",
-                "Game Running", JOptionPane.YES_NO_OPTION);
-    }
-
-    // Instantiates the minesweeper grid tiles and sets the action listeners.
+    /**
+     * Instantiates the Minefield based on the settings selected.
+     * @param difficulty - The difficulty to set the game to.
+     */
     private void initiateMinesweeperGrid(Difficulty difficulty) {
         isAGameRunning = true;
         minefield = new Minefield(difficulty);
@@ -150,7 +198,10 @@ public class Controller implements Callback {
         }
     }
 
-    // Handles the selection of minesweeper grid tiles.
+    /**
+     * Handles the selection of a Tile in the view.
+     * @param e  - The mouse event triggered.
+     */
     private void minesweeperGridTileClicked(MouseEvent e) {
         if (!isTimerRunning) {
             isTimerRunning = true;
@@ -159,12 +210,15 @@ public class Controller implements Callback {
         for (int x = 0; x < minefield.getGridWidth(); x++) {
             for (int y = 0; y < minefield.getGridHeight(); y++) {
                 if (view.getMinesweeperGridTile(x, y) == e.getSource()) {
-                    minefield.selectTile(x, y, e.getButton() == 3);
+                    minefield.selectTile(minefield.getTile(x, y), e.getButton() == 3);
                 }
             }
         }
     }
 
+    /**
+     * Starts the games timer when the first Tile is selected.
+     */
     private void startGameTimer() {
         timer = new Timer();
         new Thread(new Runnable() {
@@ -176,26 +230,19 @@ public class Controller implements Callback {
                     @Override
                     public void run() {
                         time++;
-                        view.setScoreLabel(time);
+                        view.setScoreLabel(Integer.toString(time));
                     }
                 }, 0, 1000);
             }
         }).start();
     }
 
+    /**
+     * Stops the games timer when a outcome is reached.
+     */
     private void stopGameTimer() {
+        isAGameRunning = false;
         isTimerRunning = false;
         timer.cancel();
     }
-
-    // If a tile has no adjacent mines then neighbouring tiles are revealed.
-    /*private void revealEmptyTiles(int x, int y) {
-        for (int i = x - 1; i < x + 2; i++) {
-            for (int j = y - 1; j < y + 2; j++) {
-                if (i > - 1 && i < minefield.getGridLength() && j > - 1 && j < minefield.getGridLength()) {
-                    selectTile(i, j);
-                }
-            }
-        }
-    }*/
 }

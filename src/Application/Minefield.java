@@ -21,7 +21,7 @@ public class Minefield {
 
     public Minefield(Difficulty gameDifficulty) {
         this.gameDifficulty = gameDifficulty;
-        this.gridWidth = determineGridLength();
+        this.gridWidth = determineGridWidth();
         this.gridHeight = this.gridWidth == 30 ? 16 : this.gridWidth;
         this.tiles = new Tile[gridWidth][gridHeight];
         instantiateTiles();
@@ -36,10 +36,6 @@ public class Minefield {
         return this.gridHeight;
     }
     
-    public Difficulty getDifficulty() {
-        return this.gameDifficulty;
-    }
-
     public Tile getTile(int xPosition, int yPosition) {
         return tiles[xPosition][yPosition];
     }
@@ -47,41 +43,39 @@ public class Minefield {
     private void instantiateTiles() {
         for (int x = 0; x < this.gridWidth; x++) {
             for (int y = 0; y < this.gridHeight; y++) {
-                tiles[x][y] = new Tile();
+                tiles[x][y] = new Tile(x, y);
             }
         }
         randomizeMineTiles();
     }
 
-    public void selectTile(int xPosition, int yPosition, boolean flag) {
-        Tile tile = tiles[xPosition][yPosition];
+    public void selectTile(Tile tile, boolean flag) {
         if (flag) {
             tile.flagTile();
-            callback.flagTile(xPosition, yPosition);
-        } else if (!tile.isTileRevealed() && tile.getAdjacentMineCount() == 0) {
-            tile.revealTile();
-            revealNeighborhood(xPosition, yPosition);
-        } else if (tile.isMineTile()) {
-            tile.revealTile();
-            callback.displayTile(xPosition, yPosition, "B");
-            revealMinefield();
+            callback.flagTile(tile);
         } else if (!tile.isTileFlagged()) {
-            tile.revealTile();
-            callback.displayTile(xPosition, yPosition, tile.getAdjacentMineCount() == 0 ? "" 
-                    : Integer.toString(tile.getAdjacentMineCount()));
-            checkForWin();
+            if (!tile.isTileRevealed() && tile.getAdjacentMineCount() == 0) {
+                tile.revealTile();
+                revealNeighborhood(tile);
+            } else if (tile.isMineTile()) {
+                tile.revealTile();
+                callback.displayTile(tile);
+                revealMinefield();
+            } else if (!tile.isTileFlagged()) {
+                tile.revealTile();
+                callback.displayTile(tile);
+                checkForResult();
+            }
         }
     }
    
     
-    public void revealMinefield() {
+    private void revealMinefield() {
         for (int x = 0; x < this.gridWidth; x++) {
             for (int y = 0; y < this.gridHeight; y++) {
                 Tile tile = tiles[x][y];
                 if (!tile.isTileRevealed()) {
-                    String label = tile.isMineTile() ? "B" : tile.getAdjacentMineCount() == 0 ? 
-                            "" : Integer.toString(tile.getAdjacentMineCount());
-                    callback.displayTile(x, y, label);
+                    callback.displayTile(tile);
                 }
             }
         }
@@ -89,7 +83,7 @@ public class Minefield {
         tiles = null;
     }
     
-    private int determineGridLength() {
+    private int determineGridWidth() {
         switch (this.gameDifficulty) {
             case BEGINNER: return 9;
             case INTERMEDIATE: return 16;
@@ -104,37 +98,37 @@ public class Minefield {
         while (i < gameDifficulty.getMineCount()) {
             int randomX = random.nextInt(this.gridWidth - 1);
             int randomY = random.nextInt(this.gridHeight - 1);
-            if (!tiles[randomX][randomY].isMineTile()) {
-                tiles[randomX][randomY].setMineTile();
-                incrementAdjacentMineCount(randomX, randomY);
+            Tile tile = tiles[randomX][randomY];
+            if (!tile.isMineTile()) {
+                tile.setMineTile();
+                incrementAdjacentMineCount(tile);
                 i++;
             }
         }
     }
 
-    private void incrementAdjacentMineCount(int x, int y) {
-        for (int i = x - 1; i < x + 2; i++) {
-            for (int j = y - 1; j < y + 2; j++) {
-                if (i > - 1 && i < this.gridWidth && j > -1 && j < this.gridHeight && !tiles[i][j].isMineTile()) {
-                    tiles[i][j].incrementAdjacentMineCount();
+    private void incrementAdjacentMineCount(Tile tile) {
+        for (int x = tile.getXPosition() - 1; x < tile.getXPosition() + 2; x++) {
+            for (int y = tile.getYPosition() - 1; y < tile.getYPosition() + 2; y++) {
+                if (x > - 1 && x < this.gridWidth && y > -1 && y < this.gridHeight && !tiles[x][y].isMineTile()) {
+                    tiles[x][y].incrementAdjacentMineCount();
                 }
             }
         }
     }
 
-    private void revealNeighborhood(int xPosition, int yPosition) {
-        for (int x = xPosition - 1; x < xPosition + 2; x++) {
-            for (int y = yPosition - 1; y < yPosition + 2; y++) {
+    private void revealNeighborhood(Tile tile) {
+        for (int x = tile.getXPosition() - 1; x < tile.getXPosition() + 2; x++) {
+            for (int y = tile.getYPosition() - 1; y < tile.getYPosition() + 2; y++) {
                 if (x > -1 && x < this.gridWidth && y > -1 && y < this.gridHeight) {
-                    Tile tile = tiles[x][y];
-                    callback.displayTile(x, y, String.format("%s",tile.getAdjacentMineCount()));
-                    selectTile(x, y, false);
+                    callback.displayTile(tile);
+                    selectTile(tiles[x][y], false);
                 }
             }
         }
     }
     
-    private void checkForWin() {
+    private void checkForResult() {
         int unrevealedCount = 0;
         for (int x = 0; x < this.gridWidth; x++) {
             for (int y = 0; y < this.gridHeight; y++) {

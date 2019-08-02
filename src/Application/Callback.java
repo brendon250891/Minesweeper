@@ -10,7 +10,7 @@ package Application;
  * @author brendon
  */
 public interface Callback {
-    void displayTile(int x, int y, String label);
-    void flagTile(int x, int y);
+    void displayTile(Tile tile);
+    void flagTile(Tile tile);
     void gameOver(boolean didWin);
 }
